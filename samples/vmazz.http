@@ -1,0 +1,152 @@
+### v-Mazz end-to-end flow for the IntelliJ HTTP Client (run the requests top to bottom).
+### Demo logins (password Password@123): admin@vmazz.com, subadmin@vmazz.com, buyer@vmazz.com
+
+@host = http://localhost:8080
+
+### 1. ADMIN logs in  (saves the token as {{adminToken}})
+POST {{host}}/api/v1/auth/login
+Content-Type: application/json
+
+{ "email": "admin@vmazz.com", "password": "Password@123" }
+
+> {% client.global.set("adminToken", response.body.accessToken); %}
+
+### 2. ADMIN creates an item in the item master (leave itemCode out to have one generated)
+POST {{host}}/api/v1/admin/items
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "itemName": "Premium Tea Powder 1 kg",
+  "category": "GROCERIES",
+  "subCategory": "Beverages",
+  "brand": "v-Mazz Select",
+  "description": "CTC tea powder",
+  "specification": "Assam CTC, strong liquor, 1 kg pouch",
+  "hsnCode": "0902",
+  "uom": "KG",
+  "unitPrice": 420.00,
+  "mrp": 480.00,
+  "taxPercent": 5,
+  "availableQuantity": 300,
+  "minOrderQuantity": 2
+}
+
+> {% client.global.set("newItemId", response.body.id); %}
+
+### 3. ADMIN lists the company's items
+GET {{host}}/api/v1/admin/items?category=GROCERIES
+Authorization: Bearer {{adminToken}}
+
+### 4. ADMIN creates a sub user
+POST {{host}}/api/v1/admin/users
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "fullName": "Store Keeper", "email": "storekeeper@vmazz.com", "mobile": "9876500000", "password": "Password@123" }
+
+### 5. A customer registers on the portal (saves {{buyerToken}})
+POST {{host}}/api/v1/auth/register-customer
+Content-Type: application/json
+
+{
+  "fullName": "Priya Sharma",
+  "email": "priya@example.com",
+  "mobile": "9876543210",
+  "password": "Password@123",
+  "organizationName": "Sharma Caterers"
+}
+
+> {% client.global.set("buyerToken", response.body.accessToken); %}
+
+### 5b. ...or log in as the demo buyer
+POST {{host}}/api/v1/auth/login
+Content-Type: application/json
+
+{ "email": "buyer@vmazz.com", "password": "Password@123" }
+
+> {% client.global.set("buyerToken", response.body.accessToken); %}
+
+### 6. Browse the storefront (no login needed)
+GET {{host}}/api/v1/catalog/categories
+
+###
+GET {{host}}/api/v1/catalog/items?category=GROCERIES&sort=price_asc
+
+###
+GET {{host}}/api/v1/catalog/items?q=rice&inStockOnly=true
+
+### 7. Add to cart (itemId 1 = Basmati rice in the demo data)
+POST {{host}}/api/v1/cart/items
+Authorization: Bearer {{buyerToken}}
+Content-Type: application/json
+
+{ "itemId": 1, "quantity": 2 }
+
+### 7b. Add the tea created in step 2
+POST {{host}}/api/v1/cart/items
+Authorization: Bearer {{buyerToken}}
+Content-Type: application/json
+
+{ "itemId": {{newItemId}}, "quantity": 5 }
+
+### 8. View the cart
+GET {{host}}/api/v1/cart
+Authorization: Bearer {{buyerToken}}
+
+### 9. Checkout: address + order details -> purchase order(s)  (use a future requiredDeliveryDate)
+POST {{host}}/api/v1/orders/checkout
+Authorization: Bearer {{buyerToken}}
+Content-Type: application/json
+
+{
+  "contactName": "Priya Sharma",
+  "contactPhone": "9876543210",
+  "shippingAddress": {
+    "addressLine1": "45, Gandhi Road",
+    "addressLine2": "Near Central Market",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "postalCode": "641001",
+    "country": "India"
+  },
+  "paymentMethod": "COD",
+  "requiredDeliveryDate": "2027-01-15",
+  "buyerReference": "SC-PO-1001",
+  "notes": "Deliver between 9 am and 12 noon"
+}
+
+> {% client.global.set("orderId", response.body.orders[0].id); %}
+
+### 10. Customer: my orders
+GET {{host}}/api/v1/orders
+Authorization: Bearer {{buyerToken}}
+
+### 10b. Customer: one order with item details
+GET {{host}}/api/v1/orders/{{orderId}}
+Authorization: Bearer {{buyerToken}}
+
+### 11. ADMIN: orders received
+GET {{host}}/api/v1/admin/orders?status=PLACED
+Authorization: Bearer {{adminToken}}
+
+### 12. ADMIN: confirm the order  (then PACKED, SHIPPED, DELIVERED)
+PUT {{host}}/api/v1/admin/orders/{{orderId}}/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "status": "CONFIRMED" }
+
+### 13. Register a new supplier company with its admin
+POST {{host}}/api/v1/auth/register-company
+Content-Type: application/json
+
+{
+  "companyName": "Green Farms Traders",
+  "companyEmail": "info@greenfarms.example",
+  "companyPhone": "9876512345",
+  "address": { "addressLine1": "7, Market Yard", "city": "Madurai", "state": "Tamil Nadu", "postalCode": "625001", "country": "India" },
+  "adminFullName": "Arun Kumar",
+  "adminEmail": "arun@greenfarms.example",
+  "adminPassword": "Password@123"
+}

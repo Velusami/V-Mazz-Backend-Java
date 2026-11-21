@@ -1,0 +1,10 @@
+{
+  "includeAlternates": true,
+  "rows": [
+    { "reference": "R1-R10", "description": "Resistor 10k ohm 0402 1%", "quantity": 500 },
+    { "reference": "U1", "mpn": "LM358", "manufacturer": "Texas Instruments", "quantity": 50 },
+    { "reference": "U3", "mpn": "NE555", "quantity": 1000 },
+    { "reference": "U2", "description": "Dual operational amplifier DIP-8", "quantity": 100 },
+    { "reference": "X1", "description": "Laser diode 650nm 5mW", "quantity": 10 }
+  ]
+}

@@ -1,0 +1,10 @@
+Reference,Description,MPN,Manufacturer,Quantity
+R1-R10,Resistor 10k ohm 0402 1%,,,500
+C1-C4,Ceramic capacitor 100nF 0402,,Murata,200
+U1,,LM358,Texas Instruments,50
+U2,Dual operational amplifier DIP-8,,,100
+U3,,NE555,Texas Instruments,1000
+U4,5V voltage regulator TO-220,,,200
+U5,WiFi Bluetooth module,ESP32-WROOM-32,Espressif Systems,10
+Q1,NPN transistor TO-92,,,1000
+X1,Laser diode 650nm 5mW,,,10
